@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App - CHMH</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body {
+            background-size: cover;
+            background-position: center;
+            color: #ffffff;
+            height: 100vh;
+        }
+
+        .app-container {
+            /* height: 100%; */
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            /* background-color: #ac89f8; */
+            background: rgb(148, 148, 148);
+            background: linear-gradient(0deg, rgba(163, 163, 163, 1) 0%, rgba(178, 146, 240, 1) 100%);
+        }
+
+        .temp-main {
+            font-size: 4rem;
+            font-weight: bold;
+        }
+
+        .weather-details {
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            margin: 10px 0;
+        }
+
+        .detail-label {
+            font-weight: bold;
+        }
+
+        #temperature {
+            font-size: 12vh;
+        }
+
+        #condition {
+            font-size: 3vh;
+            text-align: left;
+        }
+
+        .temp-div {
+            width: 82%;
+            margin: 0 auto;
+        }
+
+        .weather-details {
+            /* /* background: rgba(241, 240, 241, 0.55); */
+            backdrop-filter: blur(11px);
+            /* -webkit-backdrop-filter: blur( 11px ); */
+            border-radius: 30px;
+            box-shadow: rgba(93, 93, 97, 0.342) 0px 50px 100px -20px, rgba(99, 98, 98, 0.479) 0px 30px 60px -30px, rgba(0, 1, 2, 0.377) 0px -2px 6px 0px inset;
+        }
+
+        .weather-details p {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .blurred-background {
+            backdrop-filter: blur(20px);
+        }
+
+        #forecast {
+            width: 100%;
+            height: 100px;
+            object-position: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container bg-opacity-50 p-4 ">
+        <div>
+            <input type="text" id="cityInput" placeholder="Enter city name"
+                class="w-3/4 pl-2 py-1 rounded-md text-black" required>
+            <button onclick="searchCity()" class=" bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-3xl">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
+        <div class="temp-div ">
+            <div class="flex items-center justify-around">
+                <div class="location text-lg mt-4" id="location">Loading...</div>
+                <div id="error" class="text-red-500 text-xl mt-4"></div>
+                <div class="date mt-4 text-lg" id="date">-- -- --</div>
+            </div>
+            <div id="forecast" class="flex itmes-center justify-center">
+                <img id="forecast_img" alt="IMG">
+            </div>
+            <div>
+                <div class="temp-main" id="temperature">--°</div>
+                <div class="temp-range text-lg" id="temp-range">--°C / --°C</div>
+            </div>
+            <div class="flex items-center justify-around">
+                <div class="condition text-xl font-semibold	" id="condition">--</div>
+            </div>
+        </div>
+        <div class="weather-details grid p-4 grid-cols-2 gap-4 mt-8 rounded-3xl  bg-opacity-50">
+            <p class="text-lg">Weather Details</p>
+            <div class="detail-item">
+                <div class="detail-label text-">Feels Like</div>
+                <div class="value text-xl" id="feels_like">--°C</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Humidity</div>
+                <div class="value text-xl" id="humidity">--%</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Wind</div>
+                <div class="value text-xl" id="wind">-- km/h</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">UV</div>
+                <div class="value text-xl" id="uv">--</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Visibility</div>
+                <div class="value text-xl" id="visibility">-- km</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Air pressure</div>
+                <div class="value text-xl" id="air-pressure">-- hPa</div>
+            </div>
+        </div>
+       <p class="mt-2">By - Mohit_CHMH</p>
+    </div>
+</body>
+
+<script>
+
+
+    function searchCity() {
+        const city = document.getElementById('cityInput').value;
+        getWeather(city)
+    }
+
+    async function getWeather(city) {
+            const API_KEY = 'b9ef8d1205e753fa2bdcf90b48041cc3';
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerText = '';
+
+            let url;
+            if (city) {
+                url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
+            } else {
+                showError("Please enter a city name");
+                return;
+            }
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('City Not Found');
+                }
+
+                const data = await response.json();
+                updateUi(data);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+    function updateUi(data) {
+        const { name } = data;
+        const { temp, feels_like, temp_min, temp_max, pressure, humidity } = data.main
+        const { main, description, icon } = data.weather[0];
+        const { visibility } = data;
+        const { speed } = data.wind;
+        const { country, id } = data.sys;
+
+
+        document.getElementById('location').innerText = `${name} ${country}`;
+        document.getElementById('temperature').innerText = `${temp}°`
+        document.getElementById('condition').innerText = `${description}`
+        document.getElementById('date').innerText = new Date().toLocaleDateString();
+        document.getElementById('temp-range').innerText = `${temp_min}°C / ${temp_max}°C`;
+        document.getElementById('feels_like').innerText = `${feels_like}`;
+        document.getElementById('humidity').innerText = `${humidity}%`;
+        document.getElementById('wind').innerText = `${speed} km/h`;
+        document.getElementById('uv').innerText = '--'
+        document.getElementById('visibility').innerText = `${visibility / 1000} km`;
+        document.getElementById('air-pressure').innerText = `${pressure} hPa`;
+
+        const weatherDetailsDiv = document.querySelector('.app-container');
+        const weatherDetailsDiv2 = document.querySelector('#forecast_img');
+
+        weatherDetailsDiv2.src = `https://openweathermap.org/img/w/${icon}.png`;
+
+        const condition = main.toLowerCase();
+        if (condition.includes('dust') || condition.includes('sandstrome')) {
+            weatherDetailsDiv.style.background = 'linear-gradient(0deg, rgba(255,213,154,1) 0%, rgba(113,81,35,1) 100%)';
+        }
+        else if (condition.includes('haze')) {
+            weatherDetailsDiv.style.background = 'linear-gradient(0deg, rgba(255,210,147,1) 0%, rgba(46,27,1,1) 100%)';
+        }
+        else if (condition.includes('clear') || condition.includes('sunny') || condition.includes('extrasunny')) {
+            weatherDetailsDiv.style.background = 'linear-gradient(0deg, rgba(169,216,255,1) 0%, rgba(61,185,255,1) 100%)';
+        } 
+        
+    }
+
+    function showError(message){
+        const error = document.getElementById("error");
+        error.innerText = message;
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+        getWeather('Jodhpur')
+    })
+
+</script>
+
+</html>
